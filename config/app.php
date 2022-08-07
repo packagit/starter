@@ -69,7 +69,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Shanghai',
 
     /*
     |--------------------------------------------------------------------------
@@ -82,7 +82,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'zh-CN',
 
     /*
     |--------------------------------------------------------------------------
@@ -108,7 +108,7 @@ return [
     |
     */
 
-    'faker_locale' => 'en_US',
+    'faker_locale' => 'zh_CN',
 
     /*
     |--------------------------------------------------------------------------
@@ -185,6 +185,9 @@ return [
         /*
          * Package Service Providers...
          */
+        \Packagit\Wechat\Providers\WechatServiceProvider::class,
+        \Packagit\Auth\Providers\AuthServiceProvider::class,
+        \Packagit\Common\Providers\CommonServiceProvider::class,
 
         /*
          * Application Service Providers...
