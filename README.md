@@ -1,64 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+## Packagit Starter
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+starter 作为新项目的基础工程，与 laravel 8.0 分支同步更新.
 
-## About Laravel
+starter 里面集成了若干常用的基础能力：
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+✔️ 微信APP/小程序/H5 的登录授权
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+✔️ 微信支付
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+✔️ 苹果登录授权
 
-## Learning Laravel
+✔️ modules/Components/Common/Models/BaseModel.php
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+✔️ modules/Components/Common/Http/Controllers/BaseController.php
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+可以通过 `php artisan route:list --path=api` 查看暴露的API列表，相关API使用参考：
 
-## Laravel Sponsors
+<https://artisansoft.feishu.cn/docs/doccnbinoOr0qUXOI00OMEMaqQg>
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### Auth 授权模块
 
-### Premium Partners
+API token 目前集成的是 sanctum，可以根据需要增加 JWT, passport 等支持，修改 API token 逻辑需要调整的位置:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+1、修改 config/auth.php 中的 guards.api.driver:
 
-## Contributing
+```
+'guards' => [
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'users',
+    ],
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    'api' => [
+        'driver'   => 'sanctum',
+        'provider' => 'users',
+        'hash'     => false,
+    ],
+],
+```
 
-## Code of Conduct
+2、修改 modules/Auth/Models/User.php 中 getUserToken 方法
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+$appid = $this->appid ?? AppHelper::getAppId();
+return $this->createToken($appid)->plainTextToken;
+```
 
-## Security Vulnerabilities
+3、修改授权登录返回的 JSON 格式
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+修改文件 modules/Auth/Http/Resources/TokenResource.php
 
-## License
+```
+public function toArray($request)
+{
+    $data = ['token' => $this->resource->getUserToken()];
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    if ($this->attachData) {
+        $data = array_merge($data, $this->attachData);
+    }
+
+    return $data;
+}
+```
+
+
+### BaseModel
+
+新建 model 需继承 BaseModel，内含日期相关的 Carbon 的日期格式化，如果需要返回字符串日期时，需要指定 string 类型, 如 `(string)$user->created_at`.
+
+### BaseController
+
+新建的 Controller 需继承 BaseController, Controller 类里直接 $this->ok(), $this->error().
+
+因为注入了 Macro, Controller 类外可以用 response()->ok(), response()->error()，使用方法一致。
+
+常规JSON数据返回可直接用 response()->json，较复杂情况可以配合 Resource 的使用:
+
+    response()->json(TokenResource::make($user));
+
+只返回成功或者失败的错误信息，可以使用封装:
+
+    $this->ok('您的密码已更新成功');
+    // or
+    $this->error('用户注册失败');
+
+特殊约定使用参考:
+
+    return app(BaseController::class)
+        ->ok('Apple 授权成功，还差最后一步', 1403, [
+            'provider'  => $oauthUser->provider,
+            'search_by' => $oauthUser->getTable(),
+            'search_id' => encrypt($oauthUser->id),
+        ]);
+
+
+### 基础用户 Model
+
+进入 modules/Auth/Models 目录下查看.
+
+1、IUserFlexible.php:
+
+用户 Model 的 interface 定义，当需要自定义 User Model 时，需要 implement IUserFlexible
+
+2、User.php
+
+用户 Model，里面封装了基础功能
+
+3、UserMeta.php
+
+对 user_metas 表是对 users 表的扩展，user 不太频繁的属性字段定义可以放在 user_metas 表，频繁常用的小字段放在 users 表.
+
+### 重要规范说明
+
+starter 工程使用模块化，也就是根据功能来封装模块，也可以叫做插件化。
+
+modules/Components/* 的作用，是模块间通用的组件封装，放在这个目录里。
+
+modules/*，是各个模块，按需添加使用, 其中 Auth, Wechat 是常规模块，工程中经常会用到的。

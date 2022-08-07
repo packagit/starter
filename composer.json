@@ -10,7 +10,8 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
-        "laravel/tinker": "^2.5"
+        "laravel/tinker": "^2.5",
+        "wikimedia/composer-merge-plugin": "^2.0"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
@@ -35,7 +36,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php -r \"passthru(sprintf(PHP_OS==='WINNT'?'xcopy %s /D /E /C /R /H /I /K /Y':'cp -rfv %s', 'patches/* vendor/'));\""
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
@@ -48,6 +50,18 @@
         ]
     },
     "extra": {
+        "merge-plugin": {
+            "include": [
+                "modules/*/composer.json",
+                "modules/Components/*/composer.json"
+            ],
+            "recurse": false,
+            "replace": true,
+            "ignore-duplicates": false,
+            "merge-dev": true,
+            "merge-extra": true,
+            "merge-extra-deep": true
+        },
         "laravel": {
             "dont-discover": []
         }
@@ -55,7 +69,11 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true,
+            "easywechat-composer/easywechat-composer": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
