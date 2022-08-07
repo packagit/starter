@@ -1,0 +1,9 @@
+[submodule "modules/Auth"]
+	path = modules/Auth
+	url = git@github.com:packagit/auth.git
+[submodule "modules/Components/Common"]
+	path = modules/Components/Common
+	url = git@github.com:packagit/component-common.git
+[submodule "modules/Wechat"]
+	path = modules/Wechat
+	url = git@github.com:packagit/wechat.git
