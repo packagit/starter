@@ -1,8 +1,8 @@
 {
-    "name": "laravel/laravel",
+    "name": "packagit/starter",
     "type": "project",
-    "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "description": "Packagit Starter Based On The Laravel Framework.",
+    "keywords": ["packagit", "framework", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^7.3|^8.0",
